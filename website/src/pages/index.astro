@@ -1,0 +1,506 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Home" description="MTF is an open security standard for describing and verifying the security posture of MCP server bundles.">
+  <section class="hero">
+    <div class="hero-content">
+      <h1>mpak Trust Framework</h1>
+      <p class="tagline">An open security standard for MCP server bundles</p>
+      <p class="description">
+        MTF defines four compliance levels across five security domains for bundle publishers,
+        enabling authors, registries, and consumers to establish
+        and verify security guarantees for AI tool extensions.
+      </p>
+      <div class="cta-buttons">
+        <a href="/spec/0.1/" class="btn btn-primary">Read the Spec</a>
+        <a href="https://github.com/NimbleBrainInc/mpak-scanner" class="btn btn-secondary">Get the Scanner</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="problem">
+    <div class="container">
+      <h2>The Problem</h2>
+      <p>
+        MCP servers extend AI assistants with powerful capabilities: filesystem access,
+        network requests, database queries, and code execution. This power creates
+        significant security risk. A malicious or compromised MCP bundle can:
+      </p>
+      <ul class="threat-list">
+        <li>Exfiltrate sensitive data from the user's environment</li>
+        <li>Execute arbitrary code with user privileges</li>
+        <li>Serve as a vector for supply chain attacks</li>
+        <li>Poison AI behavior through tool description injection</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="levels">
+    <div class="container">
+      <h2>Compliance Levels</h2>
+      <p class="section-intro">
+        Four levels of increasing security assurance. Start with L1 in minutes,
+        progress to L4 for maximum trust.
+      </p>
+      <div class="level-grid">
+        <div class="level-card">
+          <div class="level-badge l1">L1</div>
+          <h3>Basic</h3>
+          <p class="level-target">Personal projects, experimentation</p>
+          <ul>
+            <li>No embedded secrets</li>
+            <li>No malicious patterns</li>
+            <li>Valid manifest</li>
+            <li>Tool declarations</li>
+            <li>SBOM generation</li>
+          </ul>
+        </div>
+        <div class="level-card">
+          <div class="level-badge l2">L2</div>
+          <h3>Standard</h3>
+          <p class="level-target">Team tools, published packages</p>
+          <ul>
+            <li>Vulnerability scanning (EPSS/KEV)</li>
+            <li>Dependency pinning</li>
+            <li>Static analysis</li>
+            <li>Author identity</li>
+            <li>Tool description safety</li>
+          </ul>
+        </div>
+        <div class="level-card">
+          <div class="level-badge l3">L3</div>
+          <h3>Verified</h3>
+          <p class="level-target">Production, enterprise use</p>
+          <ul>
+            <li>Cryptographic signing</li>
+            <li>Build attestation (SLSA)</li>
+            <li>Input validation</li>
+            <li>OpenSSF Scorecard</li>
+            <li>Credential scope declaration</li>
+          </ul>
+        </div>
+        <div class="level-card">
+          <div class="level-badge l4">L4</div>
+          <h3>Attested</h3>
+          <p class="level-target">Critical infrastructure</p>
+          <ul>
+            <li>Behavioral analysis</li>
+            <li>Reproducible builds</li>
+            <li>Commit linkage</li>
+            <li>Full provenance chain</li>
+            <li>Independent verification</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mcp-specific">
+    <div class="container">
+      <h2>MCP-Specific Security</h2>
+      <p class="section-intro">
+        MTF addresses attack surfaces unique to AI-assisted development that
+        traditional package security tools miss.
+      </p>
+      <div class="threat-grid">
+        <div class="threat-card">
+          <h3>Tool Description Poisoning</h3>
+          <p>
+            LLMs treat tool descriptions as trusted instructions. A malicious
+            description can direct AI to exfiltrate data without user awareness.
+          </p>
+          <code class="control-id">CD-03</code>
+        </div>
+        <div class="threat-card">
+          <h3>Slopsquatting</h3>
+          <p>
+            Attackers register package names commonly hallucinated by AI coding
+            assistants, targeting AI-generated code rather than human typos.
+          </p>
+          <code class="control-id">CQ-06</code>
+        </div>
+        <div class="threat-card">
+          <h3>Credential Blast Radius</h3>
+          <p>
+            MCP servers aggregate OAuth tokens for multiple services. Broad
+            scopes create cascading breach potential across integrated services.
+          </p>
+          <code class="control-id">CD-04</code>
+        </div>
+        <div class="threat-card">
+          <h3>Behavioral Mismatch</h3>
+          <p>
+            Dynamic analysis in isolated sandboxes verifies that declared
+            permissions match actual runtime behavior.
+          </p>
+          <code class="control-id">CQ-07</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="domains">
+    <div class="container">
+      <h2>Security Domains</h2>
+      <div class="domain-list">
+        <div class="domain">
+          <span class="domain-code">SC</span>
+          <div class="domain-info">
+            <h3>Supply Chain</h3>
+            <p>SBOM generation, vulnerability scanning with EPSS/KEV, dependency pinning, trusted sources</p>
+          </div>
+        </div>
+        <div class="domain">
+          <span class="domain-code">CQ</span>
+          <div class="domain-info">
+            <h3>Code Quality</h3>
+            <p>Secret detection, malicious pattern scanning, static analysis, behavioral analysis</p>
+          </div>
+        </div>
+        <div class="domain">
+          <span class="domain-code">AI</span>
+          <div class="domain-info">
+            <h3>Artifact Integrity</h3>
+            <p>Manifest validation, content hashes, cryptographic signatures, reproducible builds</p>
+          </div>
+        </div>
+        <div class="domain">
+          <span class="domain-code">PR</span>
+          <div class="domain-info">
+            <h3>Provenance</h3>
+            <p>Source repository linkage, author identity, SLSA build attestation, OpenSSF Scorecard</p>
+          </div>
+        </div>
+        <div class="domain">
+          <span class="domain-code">CD</span>
+          <div class="domain-info">
+            <h3>Capability Declaration</h3>
+            <p>Tool declarations, permission scopes, credential requirements, description safety</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="resources">
+    <div class="container">
+      <h2>Resources</h2>
+      <div class="resource-grid">
+        <a href="/spec/0.1/" class="resource-card">
+          <h3>Specification v0.1</h3>
+          <p>Full technical specification with controls across supply chain, code quality, and provenance</p>
+        </a>
+        <a href="/schemas/v0.1/" class="resource-card">
+          <h3>JSON Schemas</h3>
+          <p>Machine-readable schemas for manifests, reports, and VEX statements</p>
+        </a>
+        <a href="https://github.com/NimbleBrainInc/mpak-scanner" class="resource-card">
+          <h3>Reference Scanner</h3>
+          <p>Python implementation for automated MTF verification</p>
+        </a>
+        <a href="https://github.com/modelcontextprotocol/mcpb" class="resource-card">
+          <h3>MCPB Specification</h3>
+          <p>The bundle format that MTF builds upon</p>
+        </a>
+        <a href="https://mpak.dev" class="resource-card">
+          <h3>mpak Registry</h3>
+          <p>Discover and publish MTF-verified bundles</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .hero {
+      padding: 6rem 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg) 100%);
+    }
+
+    .hero-content {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .tagline {
+      font-size: 1.5rem;
+      color: var(--color-accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .description {
+      color: var(--color-text-muted);
+      font-size: 1.125rem;
+      margin-bottom: 2rem;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--color-accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-accent-hover);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--color-text-muted);
+      color: var(--color-text);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    section {
+      padding: 4rem 0;
+    }
+
+    section h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-intro {
+      color: var(--color-text-muted);
+      font-size: 1.125rem;
+      margin-bottom: 2rem;
+    }
+
+    .problem {
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .problem p {
+      color: var(--color-text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .threat-list {
+      list-style: none;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .threat-list li {
+      padding-left: 1.5rem;
+      position: relative;
+    }
+
+    .threat-list li::before {
+      content: "!";
+      position: absolute;
+      left: 0;
+      color: var(--color-warning);
+      font-weight: 700;
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .level-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .level-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .level-badge.l1 { background: #1e3a5f; color: #60a5fa; }
+    .level-badge.l2 { background: #1e3a3a; color: #2dd4bf; }
+    .level-badge.l3 { background: #3d3a1e; color: #facc15; }
+    .level-badge.l4 { background: #3d1e3a; color: #e879f9; }
+
+    .level-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .level-target {
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+
+    .level-card ul {
+      list-style: none;
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+    }
+
+    .level-card li {
+      padding: 0.25rem 0;
+      padding-left: 1rem;
+      position: relative;
+    }
+
+    .level-card li::before {
+      content: "+";
+      position: absolute;
+      left: 0;
+      color: var(--color-success);
+    }
+
+    .threat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .threat-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .threat-card h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .threat-card p {
+      color: var(--color-text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .control-id {
+      font-size: 0.8rem;
+      background: var(--color-bg);
+    }
+
+    .domain-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .domain {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+      padding: 1.25rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+    }
+
+    .domain-code {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1rem;
+      background: var(--color-bg);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      color: var(--color-accent);
+    }
+
+    .domain-info h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .domain-info p {
+      color: var(--color-text-muted);
+      font-size: 0.9rem;
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .resource-card {
+      display: block;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+
+    .resource-card:hover {
+      border-color: var(--color-accent);
+      text-decoration: none;
+    }
+
+    .resource-card h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+      color: var(--color-text);
+    }
+
+    .resource-card p {
+      color: var(--color-text-muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 700px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .tagline {
+        font-size: 1.25rem;
+      }
+
+      .level-grid,
+      .threat-grid,
+      .resource-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</Base>

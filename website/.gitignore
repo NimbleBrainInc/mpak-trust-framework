@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Astro
+.astro/
+
+# Synced from root (single source of truth)
+src/spec/MTF-*.md
+public/llms-full.txt
+public/schemas/v0.1/mtf-extension.json
+public/schemas/v0.1/report.json
+
+# Environment
+.env
+.env.*

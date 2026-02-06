@@ -1,0 +1,235 @@
+---
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  version: string;
+}
+
+const { title, version } = Astro.props;
+---
+
+<Base title={title} description={`MTF ${version} specification: Security controls, compliance levels, and verification methods for MCP server bundles. Covers supply chain, code quality, artifact integrity, provenance, and capability declaration.`}>
+  <div class="spec-container">
+    <aside class="spec-sidebar">
+      <div class="sidebar-content">
+        <div class="version-badge">v{version}</div>
+        <nav class="spec-nav">
+          <a href="#1-introduction">1. Introduction</a>
+          <a href="#2-threat-model">2. Threat Model</a>
+          <a href="#3-control-catalog">3. Control Catalog</a>
+          <a href="#4-manifest-specification">4. Manifest Specification</a>
+          <a href="#5-signing--attestation">5. Signing & Attestation</a>
+          <a href="#6-implementation-guide">6. Implementation Guide</a>
+          <a href="#7-specification-roadmap">7. Specification Roadmap</a>
+          <a href="#appendix-a-control-quick-reference">Appendix A: Control Quick Reference</a>
+          <a href="#appendix-b-controls-by-compliance-level">Appendix B: Controls by Level</a>
+          <a href="#appendix-c-open-questions">Appendix C: Open Questions</a>
+          <a href="#appendix-d-runtime-security-roadmap">Appendix D: Runtime Roadmap</a>
+        </nav>
+      </div>
+    </aside>
+    <article class="spec-content">
+      <slot />
+    </article>
+  </div>
+
+  <style>
+    .spec-container {
+      display: flex;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .spec-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--color-border);
+      height: calc(100vh - 60px);
+      position: sticky;
+      top: 0;
+    }
+
+    .sidebar-content {
+      padding: 2rem 1.5rem;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .version-badge {
+      display: inline-block;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .spec-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .spec-nav a {
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      padding: 0.375rem 0;
+      border-left: 2px solid transparent;
+      padding-left: 0.75rem;
+      margin-left: -0.75rem;
+    }
+
+    .spec-nav a:hover {
+      color: var(--color-text);
+      text-decoration: none;
+      border-left-color: var(--color-border);
+    }
+
+    .spec-content {
+      flex: 1;
+      min-width: 0;
+      padding: 2rem 3rem;
+      max-width: 900px;
+    }
+
+    .spec-content :global(h1) {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .spec-content :global(h2) {
+      font-size: 1.75rem;
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .spec-content :global(h3) {
+      font-size: 1.375rem;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .spec-content :global(h4) {
+      font-size: 1.125rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .spec-content :global(p) {
+      margin-bottom: 1rem;
+      color: var(--color-text);
+    }
+
+    .spec-content :global(ul),
+    .spec-content :global(ol) {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    .spec-content :global(li) {
+      margin-bottom: 0.5rem;
+    }
+
+    .spec-content :global(table) {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .spec-content :global(th),
+    .spec-content :global(td) {
+      padding: 0.75rem;
+      border: 1px solid var(--color-border);
+      text-align: left;
+    }
+
+    .spec-content :global(th) {
+      background: var(--color-surface);
+      font-weight: 600;
+    }
+
+    .spec-content :global(tr:nth-child(even)) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .spec-content :global(blockquote) {
+      border-left: 3px solid var(--color-accent);
+      margin: 1.5rem 0;
+      padding: 1rem 1.5rem;
+      background: var(--color-surface);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .spec-content :global(hr) {
+      border: none;
+      border-top: 1px solid var(--color-border);
+      margin: 2rem 0;
+    }
+
+    .spec-content :global(strong) {
+      font-weight: 600;
+    }
+
+    @media (max-width: 900px) {
+      .spec-sidebar {
+        display: none;
+      }
+
+      .spec-content {
+        padding: 1.5rem;
+      }
+    }
+
+    /* Mermaid diagram styling */
+    .spec-content :global(.mermaid) {
+      background: var(--color-surface);
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+  </style>
+
+  <script>
+    import mermaid from 'mermaid';
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#1e3a5f',
+        primaryTextColor: '#e5e5e5',
+        primaryBorderColor: '#3b82f6',
+        lineColor: '#3b82f6',
+        secondaryColor: '#141414',
+        tertiaryColor: '#0a0a0a',
+        background: '#0a0a0a',
+        mainBkg: '#141414',
+        nodeBorder: '#2a2a2a',
+        clusterBkg: '#141414',
+        clusterBorder: '#2a2a2a',
+        titleColor: '#e5e5e5',
+        edgeLabelBackground: '#141414'
+      }
+    });
+
+    // Find all mermaid code blocks and render them
+    document.querySelectorAll('pre[data-language="mermaid"]').forEach(async (pre) => {
+      const code = pre.textContent;
+      const div = document.createElement('div');
+      div.className = 'mermaid';
+      const { svg } = await mermaid.render('mermaid-' + Math.random().toString(36).substr(2, 9), code);
+      div.innerHTML = svg;
+      pre.replaceWith(div);
+    });
+  </script>
+</Base>

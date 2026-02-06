@@ -1,0 +1,16 @@
+{
+  "name": "mpaktrust-org",
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "sync-spec": "mkdir -p src/spec public/schemas/v0.1 && cp ../MTF-0.1.md src/spec/ && echo '# mpak Trust Framework (MTF) - Full Documentation\n\n> Complete MTF specification for LLM consumption.\n\n---\n' > public/llms-full.txt && cat ../MTF-0.1.md >> public/llms-full.txt && cp ../schemas/mtf-extension.schema.json public/schemas/v0.1/mtf-extension.json && cp ../schemas/report.schema.json public/schemas/v0.1/report.json",
+    "dev": "npm run sync-spec && astro dev",
+    "build": "npm run sync-spec && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^4.0.0",
+    "mermaid": "^11.12.2",
+    "rehype-slug": "^6.0.0"
+  }
+}

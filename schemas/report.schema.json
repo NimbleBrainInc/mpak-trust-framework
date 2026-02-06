@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mpaktrust.org/schemas/v0.1/report.json",
+  "title": "MTF Security Report",
+  "description": "Security scan report conforming to the mpak Trust Framework",
+  "type": "object",
+  "required": [
+    "version",
+    "bundle",
+    "scan",
+    "compliance",
+    "risk_score",
+    "domains",
+    "findings"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Report schema version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": [
+        "1.0.0"
+      ]
+    },
+    "bundle": {
+      "type": "object",
+      "description": "Information about the scanned bundle",
+      "required": [
+        "name",
+        "version",
+        "hash"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Bundle package name",
+          "examples": [
+            "@acme/weather-mcp"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "description": "Bundle version (semver)",
+          "pattern": "^\\d+\\.\\d+\\.\\d+",
+          "examples": [
+            "1.0.0"
+          ]
+        },
+        "hash": {
+          "type": "string",
+          "description": "SHA-256 hash of the bundle",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "description": "Information about the scan execution",
+      "required": [
+        "timestamp",
+        "scanner",
+        "scanner_version",
+        "duration_ms"
+      ],
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of scan completion"
+        },
+        "scanner": {
+          "type": "string",
+          "description": "Scanner tool name",
+          "examples": [
+            "mpak-scanner"
+          ]
+        },
+        "scanner_version": {
+          "type": "string",
+          "description": "Scanner version",
+          "examples": [
+            "0.1.0"
+          ]
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Scan duration in milliseconds"
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "description": "Compliance level assessment",
+      "required": [
+        "level",
+        "level_name",
+        "controls_passed",
+        "controls_failed",
+        "controls_total"
+      ],
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "Numeric compliance level (0=None, 1=Basic, 2=Standard, 3=Verified, 4=Attested)"
+        },
+        "level_name": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Basic",
+            "Standard",
+            "Verified",
+            "Attested"
+          ],
+          "description": "Human-readable compliance level name"
+        },
+        "controls_passed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of controls that passed"
+        },
+        "controls_failed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of controls that failed"
+        },
+        "controls_total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of controls checked (excluding skipped)"
+        }
+      }
+    },
+    "risk_score": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+      ],
+      "description": "Overall risk score based on findings"
+    },
+    "domains": {
+      "type": "object",
+      "description": "Results organized by security domain",
+      "additionalProperties": {
+        "$ref": "#/$defs/domainResult"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "Flattened list of all findings",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "sbom": {
+      "type": "object",
+      "description": "SBOM metadata",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "cyclonedx",
+            "spdx"
+          ],
+          "description": "SBOM format"
+        },
+        "component_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of components in the SBOM"
+        },
+        "location": {
+          "type": "string",
+          "description": "Path to SBOM file"
+        }
+      }
+    },
+    "scan_id": {
+      "type": "string",
+      "description": "Unique scan identifier (added by registry)"
+    },
+    "report_s3_uri": {
+      "type": "string",
+      "description": "S3 URI of the JSON report (added by registry)"
+    },
+    "pdf_s3_uri": {
+      "type": "string",
+      "description": "S3 URI of the PDF report (added by registry)"
+    }
+  },
+  "$defs": {
+    "domainResult": {
+      "type": "object",
+      "properties": {
+        "controls": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/controlResult"
+          }
+        }
+      }
+    },
+    "controlResult": {
+      "type": "object",
+      "required": [
+        "status",
+        "findings"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "skip",
+            "error"
+          ],
+          "description": "Control check status"
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/finding"
+          }
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if status is 'error'"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "id",
+        "severity",
+        "title",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique finding identifier"
+        },
+        "control": {
+          "type": "string",
+          "description": "Control ID that produced this finding (SC=Supply Chain, CQ=Code Quality, AI=Artifact Integrity, PR=Provenance, CD=Capability Declaration, RG=Registry, PK=Publisher Key, IN=Installation, UP=Update)",
+          "pattern": "^(SC|CQ|AI|PR|CD|RG|PK|IN|UP)-\\d{2}$",
+          "examples": [
+            "SC-02",
+            "CQ-03",
+            "CD-03",
+            "RG-01"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low",
+            "info"
+          ],
+          "description": "Finding severity level"
+        },
+        "title": {
+          "type": "string",
+          "description": "Short description of the finding"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the finding"
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "File path where the finding was detected"
+        },
+        "line": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Line number in the file"
+        },
+        "remediation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Suggested remediation steps"
+        }
+      }
+    }
+  }
+}

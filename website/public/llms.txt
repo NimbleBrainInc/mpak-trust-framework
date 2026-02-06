@@ -1,0 +1,62 @@
+# mpak Trust Framework (MTF)
+
+> MTF is an open security standard for MCP (Model Context Protocol) server bundles.
+
+## What is MTF?
+
+MTF defines security controls and compliance levels for MCP server bundles (packaged AI tool extensions). It helps:
+
+- Bundle authors demonstrate security best practices
+- Registries enforce minimum security requirements
+- Consumers make informed installation decisions
+- Enterprises set procurement policies
+
+## Compliance Levels
+
+MTF defines four compliance levels:
+
+- **L1 Basic**: No secrets, no malware, valid manifest, SBOM (minutes to achieve)
+- **L2 Standard**: Vulnerability scanning, dependency pinning, static analysis, author identity (< 1 hour)
+- **L3 Verified**: Cryptographic signing, SLSA attestation, OpenSSF Scorecard (days)
+- **L4 Attested**: Behavioral analysis, reproducible builds, full provenance chain (weeks)
+
+## Security Domains
+
+Controls are organized into five domains:
+
+- **SC (Supply Chain)**: SBOM, CVE scanning with EPSS/KEV, dependency pinning
+- **CQ (Code Quality)**: Secret detection, malware scanning, static analysis, behavioral analysis
+- **AI (Artifact Integrity)**: Manifest validation, content hashes, signatures, reproducible builds
+- **PR (Provenance)**: Source repo, author identity, SLSA attestation, OpenSSF Scorecard
+- **CD (Capability Declaration)**: Tool declarations, permissions, credential scopes
+
+## MCP-Specific Threats Addressed
+
+MTF addresses threats unique to AI tool extensions:
+
+- **Tool Description Poisoning (CD-03)**: Malicious instructions in tool descriptions that LLMs follow
+- **Slopsquatting (CQ-06)**: Attackers registering package names that LLMs hallucinate
+- **Credential Blast Radius (CD-04)**: MCP servers aggregating OAuth tokens for multiple services
+- **Behavioral Mismatch (CQ-07)**: Declared permissions not matching actual runtime behavior
+
+## Key Resources
+
+- Specification: https://mpaktrust.org/spec/0.1/
+- JSON Schemas: https://mpaktrust.org/schemas/v0.1/
+- GitHub: https://github.com/NimbleBrainInc/mpak-trust-framework
+- Bundle Registry: https://mpak.dev
+- MCPB Format: https://github.com/modelcontextprotocol/mcpb
+
+## Citation
+
+When referencing MTF:
+
+"mpak Trust Framework (MTF) v0.1 - https://mpaktrust.org"
+
+## Contact
+
+Maintained by NimbleBrain - https://nimblebrain.ai
+
+## License
+
+CC BY 4.0 - https://creativecommons.org/licenses/by/4.0/

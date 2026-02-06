@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mpaktrust.org/schemas/v0.1/mtf-extension.json",
+  "title": "MTF Extension",
+  "description": "MTF security extension for mcpb manifests. Validates the _meta['org.mpaktrust'] object.",
+  "type": "object",
+  "required": ["mtf_version"],
+  "properties": {
+    "mtf_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$",
+      "description": "MTF specification version",
+      "examples": ["0.1"]
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "Declared MTF compliance level (1=Basic, 2=Standard, 3=Verified, 4=Attested)"
+    },
+    "permissions": {
+      "$ref": "#/$defs/permissions",
+      "description": "System access requirements (CD-02)"
+    },
+    "credentials": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/credential" },
+      "description": "OAuth/API credential requirements (CD-04, CD-05)"
+    },
+    "files": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fileHash" },
+      "description": "Bundle file hashes for integrity verification (AI-02)"
+    },
+    "source": {
+      "$ref": "#/$defs/source",
+      "description": "Source commit linkage (PR-04)"
+    },
+    "build": {
+      "$ref": "#/$defs/build",
+      "description": "Build provenance metadata (PR-03)"
+    },
+    "signature": {
+      "$ref": "#/$defs/signature",
+      "description": "Bundle signature (AI-03)"
+    },
+    "attestation": {
+      "$ref": "#/$defs/attestation",
+      "description": "SLSA provenance attestation (PR-03)"
+    },
+    "scorecard": {
+      "$ref": "#/$defs/scorecard",
+      "description": "OpenSSF Scorecard results (PR-05)"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "filesystem": {
+          "enum": ["none", "read", "write", "full"],
+          "default": "none"
+        },
+        "network": {
+          "enum": ["none", "outbound", "inbound", "full"],
+          "default": "none"
+        },
+        "environment": {
+          "enum": ["none", "read", "write"],
+          "default": "none"
+        },
+        "subprocess": {
+          "enum": ["none", "restricted", "full"],
+          "default": "none"
+        },
+        "native": {
+          "enum": ["none", "required"],
+          "default": "none"
+        }
+      },
+      "additionalProperties": false
+    },
+    "credential": {
+      "type": "object",
+      "required": ["provider", "scopes", "justification"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Service provider identifier (e.g., 'google', 'github', 'slack')"
+        },
+        "scopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Required OAuth scopes or API permissions"
+        },
+        "justification": {
+          "type": "string",
+          "description": "Why these scopes are needed"
+        },
+        "token_handling": {
+          "$ref": "#/$defs/tokenHandling"
+        }
+      },
+      "additionalProperties": false
+    },
+    "tokenHandling": {
+      "type": "object",
+      "properties": {
+        "storage": {
+          "enum": ["memory", "disk", "keychain"],
+          "default": "memory",
+          "description": "Where tokens are stored"
+        },
+        "max_lifetime_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum token lifetime in seconds"
+        },
+        "refresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether token refresh is enabled"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fileHash": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Relative file path within bundle"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hash"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "File size in bytes"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["commit"],
+      "properties": {
+        "commit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$",
+          "description": "Full SHA-1 commit hash"
+        },
+        "signed": {
+          "type": "boolean",
+          "description": "Whether commit is GPG signed"
+        }
+      },
+      "additionalProperties": false
+    },
+    "build": {
+      "type": "object",
+      "required": ["builder"],
+      "properties": {
+        "builder": {
+          "type": "string",
+          "description": "Builder identity (e.g., 'github-actions')"
+        },
+        "reproducible": {
+          "type": "boolean",
+          "description": "Whether build is reproducible"
+        }
+      },
+      "additionalProperties": false
+    },
+    "signature": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["sigstore", "gpg", "minisign"]
+        },
+        "bundle_path": {
+          "type": "string",
+          "description": "Path to signature bundle (sigstore)"
+        },
+        "signature_path": {
+          "type": "string",
+          "description": "Path to detached signature (gpg/minisign)"
+        },
+        "public_key": {
+          "type": "string",
+          "description": "Public key or key ID"
+        },
+        "signer_identity": {
+          "type": "string",
+          "format": "uri",
+          "description": "OIDC identity URI (sigstore keyless)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "attestation": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "https://slsa.dev/provenance/v1"
+        },
+        "bundle_path": {
+          "type": "string",
+          "description": "Path to attestation bundle"
+        },
+        "bundle_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to attestation bundle"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scorecard": {
+      "type": "object",
+      "required": ["score", "scan_date"],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 10
+          }
+        },
+        "scan_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "report_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
