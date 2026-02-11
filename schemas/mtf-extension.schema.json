@@ -27,11 +27,6 @@
       "items": { "$ref": "#/$defs/credential" },
       "description": "OAuth/API credential requirements (CD-04, CD-05)"
     },
-    "files": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/fileHash" },
-      "description": "Bundle file hashes for integrity verification (AI-02)"
-    },
     "source": {
       "$ref": "#/$defs/source",
       "description": "Source commit linkage (PR-04)"
@@ -122,27 +117,6 @@
           "type": "boolean",
           "default": true,
           "description": "Whether token refresh is enabled"
-        }
-      },
-      "additionalProperties": false
-    },
-    "fileHash": {
-      "type": "object",
-      "required": ["path", "sha256"],
-      "properties": {
-        "path": {
-          "type": "string",
-          "description": "Relative file path within bundle"
-        },
-        "sha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$",
-          "description": "SHA-256 hash"
-        },
-        "size": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "File size in bytes"
         }
       },
       "additionalProperties": false

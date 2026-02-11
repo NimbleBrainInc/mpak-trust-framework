@@ -99,7 +99,7 @@ MTF defines four compliance levels. Each level includes all requirements from pr
 
 The following guarantees MUST hold across all MTF versions:
 
-1. **Signed content:** All executable bundle content is cryptographically signed and hash-verified before execution (L3+).
+1. **Signed content:** All executable bundle content is cryptographically signed and integrity-verified before execution (L3+).
 2. **Dependency transparency:** SBOMs enumerate all direct and transitive dependencies with pinned versions.
 3. **Revocation enforcement:** Revoked bundles are blocked at install time; clients MUST check revocation status.
 4. **Consent for escalation:** Permission or scope increases during updates require explicit user consent.
@@ -247,13 +247,13 @@ Each control in this catalog follows a consistent structure:
 
 Artifact integrity controls ensure that bundles are complete, unmodified, and verifiably from the claimed publisher.
 
-| ID    | Control             | Level | Enforcement | Threats Addressed             |
-| ----- | ------------------- | ----- | ----------- | ----------------------------- |
-| AI-01 | Manifest Validation | L1    | Scanner     | Metadata manipulation         |
-| AI-02 | Content Hashes      | L2    | Scanner     | Tampering, phantom components |
-| AI-03 | Bundle Signing      | L3    | Scanner     | Publisher impersonation       |
-| AI-04 | Reproducible Builds | L4    | Scanner     | Build tampering               |
-| AI-05 | Bundle Completeness | L2    | Client      | Phantom components            |
+| ID    | Control             | Level | Enforcement | Threats Addressed       |
+| ----- | ------------------- | ----- | ----------- | ----------------------- |
+| AI-01 | Manifest Validation | L1    | Scanner     | Metadata manipulation   |
+| AI-02 | *(Reserved)*        | —     | —           | —                       |
+| AI-03 | Bundle Signing      | L3    | Scanner     | Publisher impersonation |
+| AI-04 | Reproducible Builds | L4    | Scanner     | Build tampering         |
+| AI-05 | Bundle Completeness | L2    | Client      | Phantom components      |
 
 #### AI-01: Manifest Validation
 
@@ -308,71 +308,6 @@ Artifact integrity controls ensure that bundles are complete, unmodified, and ve
 
 **Threats Addressed:** Metadata manipulation (2.2.7)
 
-#### AI-02: Content Hashes
-
-**Level:** L2 | **Enforcement:** Scanner
-
-**Rationale:** Content hashes create a tamper-evident seal over bundle contents. Any modification after publication is detectable by hash verification.
-
-**Requirements:**
-
-- Manifest MUST include `_meta.org.mpaktrust.files` array
-- Every file in bundle (except exclusions) MUST be listed with SHA-256 hash
-- Hashes MUST be verified against actual file contents
-
-**File Entry Format:**
-
-```json
-{
-  "_meta": {
-    "org.mpaktrust": {
-      "files": [
-        {
-          "path": "src/server.py",
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "size": 4096
-        }
-      ]
-    }
-  }
-}
-```
-
-| Field    | Required | Description                        |
-| -------- | -------- | ---------------------------------- |
-| `path`   | MUST     | Relative path from bundle root     |
-| `sha256` | MUST     | Lowercase hex-encoded SHA-256 hash |
-| `size`   | SHOULD   | File size in bytes                 |
-
-**Path Normalization:**
-
-- Paths MUST use forward slashes (`/`)
-- Paths MUST NOT begin with `/` or `./`
-- Paths MUST NOT contain `..`
-- Paths MUST be sorted alphabetically for determinism
-
-**Excluded from Hashing:**
-
-| File                      | Reason                                                            |
-| ------------------------- | ----------------------------------------------------------------- |
-| `manifest.json`           | Self-reference; integrity via bundle hash (L2) or signature (L3+) |
-| `*.sig`, `.sigstore/*`    | Signature files                                                   |
-| `README.md`, `README.txt` | Documentation                                                     |
-| `LICENSE`, `LICENSE.txt`  | License                                                           |
-| `CHANGELOG.md`            | Documentation                                                     |
-| `.gitignore`              | Metadata                                                          |
-
-**Severity:**
-
-| Finding                              | Action |
-| ------------------------------------ | ------ |
-| Missing `files` array at L2+         | BLOCK  |
-| Hash mismatch                        | BLOCK  |
-| File in manifest missing from bundle | BLOCK  |
-| Declared size mismatch               | WARN   |
-
-**Threats Addressed:** Tampering, registry poisoning (2.2.9)
-
 #### AI-03: Bundle Signing
 
 **Level:** L3 | **Enforcement:** Scanner
@@ -382,7 +317,7 @@ Artifact integrity controls ensure that bundles are complete, unmodified, and ve
 **Requirements:**
 
 - Bundle MUST include cryptographic signature
-- Signature MUST cover manifest hash and all file hashes
+- Signature MUST cover manifest hash and SBOM hash
 - Signature MUST be verifiable against publisher identity
 
 **What MUST Be Signed:**
@@ -393,7 +328,6 @@ Artifact integrity controls ensure that bundles are complete, unmodified, and ve
 | Package version  | From manifest               |
 | Manifest SHA-256 | Hash of canonical manifest  |
 | SBOM SHA-256     | Hash of SBOM file           |
-| All file hashes  | Mirrors `files` array       |
 | Timestamp        | ISO 8601 signing time       |
 | Signer identity  | OIDC URI or key fingerprint |
 
@@ -409,7 +343,6 @@ Artifact integrity controls ensure that bundles are complete, unmodified, and ve
     "manifest_sha256": "abc123...",
     "sbom_sha256": "def456..."
   },
-  "files": [{ "path": "src/server.py", "sha256": "..." }],
   "timestamp": "2026-02-06T12:00:00Z",
   "signer_identity": "https://github.com/username"
 }
@@ -500,11 +433,11 @@ Payload MUST use RFC 8785 (JSON Canonicalization Scheme) before signing.
 
 **Level:** L2 | **Enforcement:** Client
 
-**Rationale:** Attackers may include undeclared files (executables, scripts) that manifest validation doesn't detect. Completeness verification ensures bundles contain exactly what's declared.
+**Rationale:** Attackers may include undeclared files (executables, scripts) that manifest validation doesn't detect. Completeness verification ensures bundles don't contain unexpected executable content.
 
 **Requirements:**
 
-- Clients MUST verify bundle contains only declared files
+- Clients MUST scan extracted bundles for unexpected executable content
 - Undeclared executable content MUST block installation
 - Verification MUST occur before extraction to final location
 
@@ -512,21 +445,33 @@ Payload MUST use RFC 8785 (JSON Canonicalization Scheme) before signing.
 
 1. Extract bundle to temporary location
 2. Enumerate all files in bundle
-3. Compare to `_meta.org.mpaktrust.files` array
-4. Check for undeclared files
-5. BLOCK if undeclared executables found
+3. Identify files referenced by the manifest (entry points, config files, dependency lockfiles)
+4. Flag any executable files not referenced by the manifest
+5. BLOCK if unexpected executables found
 
-**Allowed Undeclared Files:**
+**Expected Files:**
+
+Files referenced by the manifest are considered expected:
+
+| Manifest Field              | Expected Files                    |
+| --------------------------- | --------------------------------- |
+| `server.entry_point`        | The server entry point            |
+| `mcp_config.args`           | Files referenced in args          |
+| `dependencies` / lockfiles  | Dependency lockfiles              |
+| `_meta.org.mpaktrust`       | MTF metadata (non-executable)     |
+
+**Always Allowed:**
 
 | Pattern                                | Reason        |
 | -------------------------------------- | ------------- |
+| `manifest.json`                        | Bundle manifest |
 | `README.md`, `README.txt`, `README`    | Documentation |
 | `LICENSE`, `LICENSE.txt`, `LICENSE.md` | License       |
 | `CHANGELOG.md`, `CHANGELOG.txt`        | Documentation |
 | `*.sig`, `.sigstore/*`                 | Signatures    |
 | `.gitignore`, `.gitattributes`         | Git metadata  |
 
-**Disallowed Undeclared Files:**
+**Disallowed Unless Referenced:**
 
 | Pattern                                | Risk            |
 | -------------------------------------- | --------------- |
@@ -537,11 +482,10 @@ Payload MUST use RFC 8785 (JSON Canonicalization Scheme) before signing.
 
 **Severity:**
 
-| Finding                           | Action |
-| --------------------------------- | ------ |
-| Undeclared executable file        | BLOCK  |
-| Undeclared non-executable file    | WARN   |
-| Declared file missing from bundle | BLOCK  |
+| Finding                          | Action |
+| -------------------------------- | ------ |
+| Unexpected executable file       | BLOCK  |
+| Unexpected non-executable file   | WARN   |
 
 **Threats Addressed:** Phantom components (2.2.6)
 
@@ -1589,6 +1533,7 @@ Registry operations controls govern how package registries manage namespaces, ma
 | RG-04 | Freshness Guarantees | L3    | Registry    | Stale/replayed data                     |
 | RG-05 | Revocation Feed      | L2    | Registry    | Compromised bundles                     |
 | RG-06 | Transparency Log     | L3    | Registry    | Registry poisoning, stealth revocations |
+| RG-07 | Bundle Digest        | L2    | Registry    | Tampering in transit, registry poisoning |
 
 #### RG-01: Namespace Governance
 
@@ -1844,6 +1789,51 @@ Registries MAY use Sigstore Rekor, RFC 9162 (Certificate Transparency), or equiv
 
 **Threats Addressed:** Registry poisoning (2.2.9), stealth revocations, unauthorized publications
 
+#### RG-07: Bundle Digest
+
+**Level:** L2 | **Enforcement:** Registry
+
+**Rationale:** Bundle integrity must be verifiable without relying on content hashes inside the bundle itself. The registry computes a digest of the uploaded archive and serves it alongside download URLs, enabling clients to detect tampering in transit or at rest.
+
+**Requirements:**
+
+- Registry MUST compute SHA-256 digest of the bundle archive on upload
+- Registry MUST store and serve the digest alongside the bundle download URL
+- Registry MUST reject re-uploads where the archive content differs but name and version match
+- Clients MUST verify the bundle digest after download before extraction
+
+**Digest Serving:**
+
+Registries MUST include the digest in API responses for package metadata:
+
+```json
+{
+  "name": "@acme/weather-server",
+  "version": "1.0.0",
+  "dist": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "url": "https://registry.example.com/bundles/@acme/weather-server/1.0.0.tar.gz"
+  }
+}
+```
+
+**Client Verification:**
+
+1. Download bundle archive
+2. Compute SHA-256 of the downloaded archive
+3. Compare to the digest provided by the registry
+4. BLOCK installation if mismatch; retry download once before failing
+
+**Severity:**
+
+| Finding                              | Action       |
+| ------------------------------------ | ------------ |
+| Registry does not serve digest       | BLOCK at L2+ |
+| Digest mismatch after download       | BLOCK, retry |
+| Re-upload with different content     | BLOCK        |
+
+**Threats Addressed:** Tampering in transit, registry poisoning (2.2.9)
+
 ---
 
 ### 3.8 Publisher Identity (PK-)
@@ -2036,7 +2026,7 @@ Installation controls govern client-side verification, user consent, and recover
 | Revocation feed query      | ✓   | ✓   | ✓   | ✓   | BLOCK          |
 | Manifest schema validation | ✓   | ✓   | ✓   | ✓   | BLOCK          |
 | Required fields present    | ✓   | ✓   | ✓   | ✓   | BLOCK          |
-| Content hashes present     |     | ✓   | ✓   | ✓   | BLOCK          |
+| Bundle digest verified     |     | ✓   | ✓   | ✓   | BLOCK          |
 | Signature present          |     |     | ✓   | ✓   | BLOCK          |
 | Signature valid            |     |     | ✓   | ✓   | BLOCK          |
 | Attestation present        |     |     | ✓   | ✓   | BLOCK          |
@@ -2060,27 +2050,24 @@ Installation controls govern client-side verification, user consent, and recover
 
 **Requirements:**
 
-- Clients MUST verify bundle hash after download
-- Clients MUST verify all file hashes after extraction
-- Clients MUST verify bundle completeness (AI-05)
+- Clients MUST verify bundle digest after download (RG-07)
+- Clients MUST verify bundle completeness after extraction (AI-05)
 
 **Verification Sequence:**
 
-1. Download bundle
-2. Verify bundle hash matches registry/lockfile
+1. Download bundle archive
+2. Verify bundle digest matches registry-provided digest (RG-07)
 3. Extract to temporary location
-4. Verify each file hash matches manifest
-5. Check for undeclared files (AI-05)
-6. Move to final installation location
-7. Update client lockfile
+4. Check for unexpected executables (AI-05)
+5. Move to final installation location
+6. Update client lockfile
 
 **Severity:**
 
-| Finding               | Action       |
-| --------------------- | ------------ |
-| Bundle hash mismatch  | BLOCK, retry |
-| File hash mismatch    | BLOCK        |
-| Undeclared executable | BLOCK        |
+| Finding                  | Action       |
+| ------------------------ | ------------ |
+| Bundle digest mismatch   | BLOCK, retry |
+| Unexpected executable    | BLOCK        |
 
 **Threats Addressed:** Tampering in transit, registry poisoning (2.2.9)
 
@@ -2264,7 +2251,7 @@ Automatic updates MUST NOT proceed if:
 | Finding                            | Action         |
 | ---------------------------------- | -------------- |
 | Breaking change in patch version   | WARN publisher |
-| Content hash mismatch on republish | BLOCK          |
+| Digest mismatch on republish       | BLOCK          |
 
 **Threats Addressed:** Unexpected breakage, version confusion
 
@@ -2380,7 +2367,6 @@ These fields are defined by MTF and live under `_meta.org.mpaktrust`.
 | `mtf_version` | string | L1       | MTF spec version (e.g., "0.1")  |
 | `level`       | number | L2       | Declared compliance level (1-4) |
 | `permissions` | object | L2       | System access requirements      |
-| `files`       | array  | L2       | All files with SHA-256 hashes   |
 
 #### 4.3.2 Permission Categories
 
@@ -2461,32 +2447,7 @@ These fields are defined by MTF and live under `_meta.org.mpaktrust`.
 | `build.reproducible` | boolean | L4          | Whether build is reproducible    |
 | `build.instructions` | string  | Recommended | URL to build instructions        |
 
-### 4.4 File Hash Format
-
-```json
-{
-  "_meta": {
-    "org.mpaktrust": {
-      "files": [
-        {
-          "path": "src/server.py",
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "size": 4096
-        }
-      ]
-    }
-  }
-}
-```
-
-**Path Requirements:**
-
-- Use forward slashes (`/`)
-- No leading `/` or `./`
-- No `..` components
-- Sorted alphabetically
-
-### 4.5 Example Manifests
+### 4.4 Example Manifests
 
 #### L1 Basic
 
@@ -2558,14 +2519,7 @@ These fields are defined by MTF and live under `_meta.org.mpaktrust`.
         "environment": "read",
         "subprocess": "none",
         "native": "none"
-      },
-      "files": [
-        {
-          "path": "server.py",
-          "sha256": "abc123...",
-          "size": 4096
-        }
-      ]
+      }
     }
   }
 }
@@ -2625,13 +2579,6 @@ These fields are defined by MTF and live under `_meta.org.mpaktrust`.
           }
         }
       ],
-      "files": [
-        {
-          "path": "server.py",
-          "sha256": "abc123...",
-          "size": 8192
-        }
-      ],
       "signature": {
         "type": "sigstore",
         "bundle": ".sigstore/manifest.sig.json"
@@ -2641,7 +2588,7 @@ These fields are defined by MTF and live under `_meta.org.mpaktrust`.
 }
 ```
 
-### 4.6 Schema Location
+### 4.5 Schema Location
 
 **Normative Schemas:**
 
@@ -2677,12 +2624,6 @@ The signed payload MUST use RFC 8785 (JSON Canonicalization Scheme) to ensure de
     "manifest_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sbom_sha256": "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"
   },
-  "files": [
-    {
-      "path": "src/server.py",
-      "sha256": "abc123..."
-    }
-  ],
   "timestamp": "2026-02-06T12:00:00Z",
   "signer_identity": "https://github.com/username"
 }
@@ -2696,7 +2637,6 @@ The signed payload MUST use RFC 8785 (JSON Canonicalization Scheme) to ensure de
 | `subject.version`         | MUST     | Package version from manifest        |
 | `subject.manifest_sha256` | MUST     | SHA-256 hash of canonical manifest   |
 | `subject.sbom_sha256`     | MUST     | SHA-256 hash of SBOM file            |
-| `files`                   | MUST     | Array of all files with hashes       |
 | `timestamp`               | MUST     | ISO 8601 signing timestamp           |
 | `signer_identity`         | MUST     | OIDC identity URI or key fingerprint |
 
@@ -2944,7 +2884,7 @@ Add supply chain verification and identity controls.
 | SC-02 CVE scan with EPSS/KEV | Real-world exploitation context |
 | SC-03 Dependency pinning     | Reproducibility baseline        |
 | PR-02 Author identity        | Accountability                  |
-| AI-02 Content hashes         | Tampering detection             |
+| RG-07 Bundle digest          | Tampering detection             |
 | CD-02 Permission correlation | Catches misrepresentation       |
 | CD-03 Description safety     | MCP-specific threat             |
 
@@ -3070,10 +3010,6 @@ jobs:
           # Check required fields
           jq -e '.name and .version and .tools' manifest.json
 
-      # Generate file hashes (AI-02)
-      - name: Generate Hashes
-        run: |
-          find src/ -type f -exec sha256sum {} \; > hashes.txt
 ```
 
 #### GitHub Actions: L3 Compliance (with Signing)
@@ -3154,7 +3090,7 @@ Scanners SHOULD evaluate controls in dependency order:
 | SBOM generation        | 5-30 seconds     | Cache by lockfile hash |
 | CVE scan               | 2-10 seconds     | Cache by SBOM hash     |
 | Secret scan            | 5-60 seconds     | No caching             |
-| Static analysis        | 10-120 seconds   | Cache by file hash     |
+| Static analysis        | 10-120 seconds   | Cache by source hash   |
 | Signature verification | < 1 second       | Cache by signature     |
 
 ## 7. Specification Roadmap
@@ -3182,7 +3118,7 @@ MCP-specific threats require both supply chain and runtime controls. v0.1 focuse
 | ID        | Control                      | Level | Enforcement     | Section |
 | --------- | ---------------------------- | ----- | --------------- | ------- |
 | **AI-01** | Manifest Validation          | L1    | Scanner         | 3.2     |
-| **AI-02** | Content Hashes               | L2    | Scanner         | 3.2     |
+| **AI-02** | *(Reserved)*                 | —     | —               | —       |
 | **AI-03** | Bundle Signing               | L3    | Scanner         | 3.2     |
 | **AI-04** | Reproducible Builds          | L4    | Scanner         | 3.2     |
 | **AI-05** | Bundle Completeness          | L2    | Client          | 3.2     |
@@ -3213,6 +3149,7 @@ MCP-specific threats require both supply chain and runtime controls. v0.1 focuse
 | **RG-04** | Freshness Guarantees         | L3    | Registry        | 3.7     |
 | **RG-05** | Revocation Feed              | L2    | Registry        | 3.7     |
 | **RG-06** | Transparency Log             | L3    | Registry        | 3.7     |
+| **RG-07** | Bundle Digest                | L2    | Registry        | 3.7     |
 | **PK-01** | Identity Tiers               | L2    | Registry        | 3.8     |
 | **PK-02** | Key Rotation                 | L3    | Registry        | 3.8     |
 | **PK-03** | Compromise Recovery          | L3    | Registry        | 3.8     |
@@ -3230,11 +3167,11 @@ MCP-specific threats require both supply chain and runtime controls. v0.1 focuse
 
 ### A.2 Controls by Enforcement Point
 
-| Enforcement | Count | Controls                                                                                                                                                 |
-| ----------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Scanner     | 23    | AI-01, AI-02, AI-03, AI-04, SC-01, SC-02, SC-03, SC-05, CQ-01, CQ-02, CQ-03, CQ-04, CQ-05, CD-01, CD-02, CD-03, CD-04, CD-05, PR-01, PR-03, PR-04, PR-05 |
-| Registry    | 14    | CQ-06, PR-02, RG-01, RG-02, RG-03, RG-04, RG-05, RG-06, PK-01, PK-02, PK-03, PK-04, UP-02, UP-03, UP-04                                                  |
-| Client      | 7     | AI-05, SC-04, IN-01, IN-02, IN-03, IN-04, UP-01                                                                                                          |
+| Enforcement | Count | Controls                                                                                                                                            |
+| ----------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scanner     | 22    | AI-01, AI-03, AI-04, SC-01, SC-02, SC-03, SC-05, CQ-01, CQ-02, CQ-03, CQ-04, CQ-05, CD-01, CD-02, CD-03, CD-04, CD-05, PR-01, PR-03, PR-04, PR-05 |
+| Registry    | 15    | CQ-06, PR-02, RG-01, RG-02, RG-03, RG-04, RG-05, RG-06, RG-07, PK-01, PK-02, PK-03, PK-04, UP-02, UP-03, UP-04                                    |
+| Client      | 7     | AI-05, SC-04, IN-01, IN-02, IN-03, IN-04, UP-01                                                                                                     |
 
 ## Appendix B: Controls by Compliance Level
 
@@ -3256,7 +3193,6 @@ Includes all L1 controls, plus:
 
 | ID    | Control                    | Domain                 |
 | ----- | -------------------------- | ---------------------- |
-| AI-02 | Content Hashes             | Artifact Integrity     |
 | AI-05 | Bundle Completeness        | Artifact Integrity     |
 | SC-02 | Vulnerability Scanning     | Supply Chain           |
 | SC-03 | Dependency Pinning         | Supply Chain           |
@@ -3269,6 +3205,7 @@ Includes all L1 controls, plus:
 | RG-01 | Namespace Governance       | Registry Operations    |
 | RG-02 | Name Pattern Review        | Registry Operations    |
 | RG-05 | Revocation Feed            | Registry Operations    |
+| RG-07 | Bundle Digest              | Registry Operations    |
 | PK-01 | Identity Tiers             | Publisher Identity     |
 | IN-02 | Post-Download Verification | Installation           |
 | IN-04 | Rollback Capability        | Installation           |
