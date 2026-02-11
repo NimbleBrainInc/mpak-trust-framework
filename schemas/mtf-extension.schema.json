@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mpaktrust.org/schemas/v0.1/mtf-extension.json",
+  "$id": "https://mpaktrust.org/schemas/mtf/v0.1/mtf-extension.json",
   "title": "MTF Extension",
   "description": "MTF security extension for mcpb manifests. Validates the _meta['org.mpaktrust'] object.",
   "type": "object",

@@ -28,10 +28,14 @@ npm run preview  # Preview production build
 
 ## Schemas
 
-JSON schemas live in `schemas/` (synced to `website/public/schemas/v0.1/`):
-- `mtf-extension.schema.json` - MTF extension for mcpb manifests
-- `report.schema.json` - Verification report format
+JSON schemas live in `schemas/`, synced to `website/public/schemas/{spec}/{version}/`:
+
+| File | Spec | Published URL |
+|------|------|---------------|
+| `mcpb-manifest-v0.4.schema.json` | MCPB | `https://mpaktrust.org/schemas/mcpb/v0.4/manifest.json` |
+| `mtf-extension.schema.json` | MTF | `https://mpaktrust.org/schemas/mtf/v0.1/mtf-extension.json` |
+| `report.schema.json` | MTF | `https://mpaktrust.org/schemas/mtf/v0.1/report.json` |
 
 VEX statements use [OpenVEX](https://github.com/openvex/spec), not a custom schema.
 
-Published at: https://mpaktrust.org/schemas/v0.1/
+Published at: https://mpaktrust.org/schemas/

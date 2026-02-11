@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mpaktrust.org/schemas/v0.1/report.json",
+  "$id": "https://mpaktrust.org/schemas/mtf/v0.1/report.json",
   "title": "MTF Security Report",
   "description": "Security scan report conforming to the mpak Trust Framework",
   "type": "object",

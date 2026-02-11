@@ -2594,8 +2594,8 @@ These fields are defined by MTF and live under `_meta.org.mpaktrust`.
 
 | Schema              | URL                                                     |
 | ------------------- | ------------------------------------------------------- |
-| MTF Extension       | `https://mpaktrust.org/schemas/v0.1/mtf-extension.json` |
-| Verification Report | `https://mpaktrust.org/schemas/v0.1/report.json`        |
+| MTF Extension       | `https://mpaktrust.org/schemas/mtf/v0.1/mtf-extension.json` |
+| Verification Report | `https://mpaktrust.org/schemas/mtf/v0.1/report.json`        |
 
 **External Schemas:**
 
@@ -2800,7 +2800,7 @@ Scanners and registries produce verification reports documenting control complia
 
 ```json
 {
-  "$schema": "https://mpaktrust.org/schemas/v0.1/report.json",
+  "$schema": "https://mpaktrust.org/schemas/mtf/v0.1/report.json",
   "package": "@acme/server",
   "version": "1.0.0",
   "verified_at": "2026-02-06T12:00:00Z",
