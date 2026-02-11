@@ -10,8 +10,9 @@ dist/
 # Synced from root (single source of truth)
 src/spec/MTF-*.md
 public/llms-full.txt
-public/schemas/v0.1/mtf-extension.json
-public/schemas/v0.1/report.json
+public/schemas/mtf/v0.1/mtf-extension.json
+public/schemas/mtf/v0.1/report.json
+public/schemas/mcpb/v0.4/manifest.json
 
 # Environment
 .env

@@ -1,4 +1,356 @@
 ---
-// Redirect to latest version
-return Astro.redirect('/schemas/v0.1/', 302);
+import Base from '../../layouts/Base.astro';
 ---
+
+<Base title="Schemas" description="JSON Schema definitions for MCP server bundles and MTF security extensions.">
+  <div class="container">
+    <header class="page-header">
+      <h1>JSON Schemas</h1>
+      <p class="intro">
+        Machine-readable schemas for MCP server bundles and security verification.
+      </p>
+    </header>
+
+    <section class="spec-group">
+      <div class="spec-header">
+        <h2>MTF</h2>
+        <span class="version-badge">v0.1</span>
+        <p class="spec-desc">
+          <a href="/spec/0.1/">mpak Trust Framework</a> security extensions and verification reports.
+        </p>
+      </div>
+
+      <div class="schemas">
+        <div class="schema-card">
+          <div class="schema-header">
+            <h3>mtf-extension.json</h3>
+            <code class="schema-url">https://mpaktrust.org/schemas/mtf/v0.1/mtf-extension.json</code>
+          </div>
+          <p>
+            MTF security extension schema for mcpb manifests. Validates the
+            <code>_meta.org.mpaktrust</code> namespace including permissions,
+            file hashes, signatures, and provenance fields.
+          </p>
+          <div class="schema-actions">
+            <a href="/schemas/mtf/v0.1/mtf-extension.json" class="btn btn-primary" download>Download</a>
+            <a href="/schemas/mtf/v0.1/mtf-extension.json" class="btn btn-secondary">View Raw</a>
+          </div>
+          <details class="schema-preview">
+            <summary>Schema Preview</summary>
+            <pre><code>{`{
+  "$id": "https://mpaktrust.org/schemas/mtf/v0.1/mtf-extension.json",
+  "required": ["mtf_version"],
+  "properties": {
+    "mtf_version": { "type": "string", "pattern": "^[0-9]+\\\\.[0-9]+$" },
+    "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+    "permissions": { "filesystem", "network", "environment", "subprocess", "native" },
+    "credentials": [{ "service", "scopes", "justification", "token_lifetime" }],
+    "files": [{ "path", "sha256", "size" }],
+    "source": { "commit", "signed" },
+    "build": { "builder", "reproducible" },
+    "signature": { "type", "bundle_path", "signer_identity" },
+    "attestation": { "type", "bundle_path" }
+  }
+}`}</code></pre>
+          </details>
+        </div>
+
+        <div class="schema-card">
+          <div class="schema-header">
+            <h3>report.json</h3>
+            <code class="schema-url">https://mpaktrust.org/schemas/mtf/v0.1/report.json</code>
+          </div>
+          <p>
+            Verification report format from MTF scanners. Includes compliance level,
+            risk score, per-control results, and detailed findings with remediation.
+          </p>
+          <div class="schema-actions">
+            <a href="/schemas/mtf/v0.1/report.json" class="btn btn-primary" download>Download</a>
+            <a href="/schemas/mtf/v0.1/report.json" class="btn btn-secondary">View Raw</a>
+          </div>
+          <details class="schema-preview">
+            <summary>Schema Preview</summary>
+            <pre><code>{`{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mpaktrust.org/schemas/mtf/v0.1/report.json",
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "bundle": { ... },
+    "compliance": {
+      "level": 1-4,
+      "level_name": "Basic|Standard|Verified|Attested"
+    },
+    "risk_score": "NONE|LOW|MEDIUM|HIGH|CRITICAL",
+    "domains": { ... },
+    "findings": [ ... ]
+  }
+}`}</code></pre>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="spec-group">
+      <div class="spec-header">
+        <h2>MCPB</h2>
+        <span class="version-badge">v0.4</span>
+        <p class="spec-desc">
+          <a href="https://github.com/modelcontextprotocol/mcpb">MCP Bundle</a> manifest format for packaging and distributing MCP servers.
+        </p>
+      </div>
+
+      <div class="schemas">
+        <div class="schema-card">
+          <div class="schema-header">
+            <h3>manifest.json</h3>
+            <code class="schema-url">https://mpaktrust.org/schemas/mcpb/v0.4/manifest.json</code>
+          </div>
+          <p>
+            MCPB manifest schema (v0.4). Validates bundle metadata, server configuration,
+            tools, prompts, user config, and compatibility declarations.
+          </p>
+          <div class="schema-actions">
+            <a href="/schemas/mcpb/v0.4/manifest.json" class="btn btn-primary" download>Download</a>
+            <a href="/schemas/mcpb/v0.4/manifest.json" class="btn btn-secondary">View Raw</a>
+          </div>
+          <details class="schema-preview">
+            <summary>Schema Preview</summary>
+            <pre><code>{`{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "required": ["name", "version", "description", "author", "server"],
+  "properties": {
+    "manifest_version": { "const": "0.4" },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "description": { "type": "string" },
+    "author": { "name", "email", "url" },
+    "server": { "type", "entry_point", "mcp_config" },
+    "tools": [{ "name", "description" }],
+    "prompts": [{ "name", "description", "text" }],
+    "user_config": { ... },
+    "compatibility": { "platforms", "runtimes" }
+  }
+}`}</code></pre>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="usage">
+      <h2>Usage</h2>
+      <p>MTF extends mcpb manifests. Add the extension under <code>_meta.org.mpaktrust</code>:</p>
+      <pre><code>{`{
+  "manifest_version": "0.4",
+  "name": "@myorg/my-mcp-server",
+  "version": "1.0.0",
+  ...
+  "_meta": {
+    "org.mpaktrust": {
+      "mtf_version": "0.1",
+      "level": 2,
+      "permissions": { ... }
+    }
+  }
+}`}</code></pre>
+
+      <h3>Two-Step Validation</h3>
+      <p>Validation is two-step: first validate the base manifest against the mcpb schema, then validate the MTF extension:</p>
+      <pre><code>{`# Step 1: Validate against mcpb schema (ensures bundle can execute)
+npx ajv validate -s https://mpaktrust.org/schemas/mcpb/v0.4/manifest.json -d manifest.json
+
+# Step 2: Validate MTF extension (ensures security metadata is correct)
+npx ajv validate -s https://mpaktrust.org/schemas/mtf/v0.1/mtf-extension.json -d manifest.json`}</code></pre>
+
+      <p class="note">
+        <strong>Note:</strong> VEX statements use the <a href="https://github.com/openvex/spec">OpenVEX specification</a>.
+        MTF does not define a custom VEX schema.
+      </p>
+    </section>
+  </div>
+
+  <style>
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .page-header {
+      margin-bottom: 3rem;
+    }
+
+    .page-header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .intro {
+      color: var(--color-text-muted);
+      font-size: 1.125rem;
+    }
+
+    .spec-group {
+      margin-bottom: 3rem;
+    }
+
+    .spec-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .spec-header h2 {
+      display: inline;
+      font-size: 1.5rem;
+      margin-right: 0.75rem;
+    }
+
+    .version-badge {
+      display: inline-block;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      vertical-align: middle;
+    }
+
+    .spec-desc {
+      color: var(--color-text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .spec-desc a {
+      color: var(--color-accent);
+    }
+
+    .schemas {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .schema-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .schema-header {
+      margin-bottom: 1rem;
+    }
+
+    .schema-header h3 {
+      font-size: 1.125rem;
+      font-family: var(--font-mono);
+      margin-bottom: 0.5rem;
+    }
+
+    .schema-url {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      background: var(--color-bg);
+      word-break: break-all;
+    }
+
+    .schema-card > p {
+      color: var(--color-text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .schema-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--color-accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-accent-hover);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--color-bg);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--color-text-muted);
+      color: var(--color-text);
+    }
+
+    .schema-preview {
+      margin-top: 1rem;
+    }
+
+    .schema-preview summary {
+      cursor: pointer;
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+    }
+
+    .schema-preview summary:hover {
+      color: var(--color-text);
+    }
+
+    .schema-preview pre {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+    }
+
+    .usage {
+      border-top: 1px solid var(--color-border);
+      padding-top: 2rem;
+    }
+
+    .usage h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .usage h3 {
+      font-size: 1.125rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .usage p {
+      color: var(--color-text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .usage pre {
+      margin-bottom: 1.5rem;
+    }
+
+    .usage .note {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .usage .note a {
+      color: var(--color-accent);
+    }
+  </style>
+</Base>
