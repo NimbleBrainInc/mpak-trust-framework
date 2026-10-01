@@ -50,7 +50,7 @@ JSON schemas for validation:
 
 | Implementation | Language | Maintainer |
 |----------------|----------|------------|
-| [mpak-scanner](https://github.com/NimbleBrainInc/mpak-scanner) | Python | NimbleBrain (reference implementation) |
+| [mpak-scanner](https://github.com/NimbleBrainInc/mpak/tree/main/apps/scanner) | Python | NimbleBrain (reference implementation) |
 
 ## Contributing
 
