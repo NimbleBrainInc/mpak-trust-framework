@@ -44,7 +44,6 @@ MTF addresses threats unique to AI tool extensions:
 - Specification: https://mpaktrust.org/spec/0.1/
 - JSON Schemas: https://mpaktrust.org/schemas/
 - GitHub: https://github.com/NimbleBrainInc/mpak-trust-framework
-- Bundle Registry: https://mpak.dev
 - MCPB Format: https://github.com/modelcontextprotocol/mcpb
 
 ## Citation
